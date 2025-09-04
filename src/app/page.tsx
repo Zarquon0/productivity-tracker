@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Clock, Plus, BookOpen, Briefcase, Code, GraduationCap, FolderOpen, Edit2, Settings, Target, Users, Calendar, FileText, Zap, Star, Heart, ShoppingCart, Camera, Music, Gamepad2, Palette, Calculator, Globe, Mail, Phone, MapPin, Video, Headphones, Coffee, Utensils, Car, Plane, Train, Bus, Bike, Dumbbell, Brain, Eye, Ear, Hand, Smile, Frown, Meh, ChevronDown, ChevronUp } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Clock, Plus, BookOpen, Briefcase, Code, GraduationCap, FolderOpen, Edit2, Settings, Target, Users, Calendar, FileText, Zap, Star, Heart, ShoppingCart, Camera, Music, Gamepad2, Palette, Calculator, Globe, Mail, Phone, MapPin, Video, Headphones, Coffee, Utensils, Car, Plane, Train, Bus, Bike, Dumbbell, Brain, Eye, Ear, Hand, Smile, Frown, Meh, ChevronDown, ChevronUp, MoreVertical } from "lucide-react";
 import { usePersistentData } from "../hooks/usePersistentData";
 import DataManager from "../components/DataManager";
 import { Type, Subject } from "../lib/storage";
@@ -17,6 +17,7 @@ export default function Home() {
     startTracking,
     stopTracking,
     getSubjectTimeBreakdown,
+    getTypeTotalTime,
     getActiveSubject,
     refreshData,
     addManualTimeEntry
@@ -38,6 +39,24 @@ export default function Home() {
     id: string;
   } | null>(null);
 
+  // Helper: open context menu anchored to a DOM element (for mobile kebab buttons)
+  const openContextMenuAtElement = (
+    e: React.MouseEvent,
+    entityType: 'subject' | 'type',
+    id: string
+  ) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const target = e.currentTarget as HTMLElement;
+    const rect = target.getBoundingClientRect();
+    setContextMenu({
+      show: true,
+      x: rect.left + rect.width / 2,
+      y: rect.top, // open above the button
+      type: entityType,
+      id
+    });
+  };
 
   // Removed old interval effect - now handled by forceUpdate
 
@@ -542,6 +561,14 @@ export default function Home() {
                     </span>
                   </div>
                 )}
+                {/* Mobile-only more button for type actions */}
+                <button
+                  className="md:hidden p-2 ml-2 text-gray-300 hover:text-white rounded"
+                  aria-label="More actions"
+                  onClick={(e) => openContextMenuAtElement(e, 'type', type.id)}
+                >
+                  <MoreVertical className="w-4 h-4" />
+                </button>
               </div>
               
               <div className="space-y-2">
@@ -636,40 +663,49 @@ export default function Home() {
                               <ChevronDown className="w-4 h-4 text-gray-400" />
                             )}
                           </button>
+
+                          {/* Mobile-only more button for subject actions */}
+                          <button
+                            className="md:hidden p-1 hover:bg-gray-600 rounded"
+                            aria-label="More actions"
+                            onClick={(e) => openContextMenuAtElement(e, 'subject', subject.id)}
+                          >
+                            <MoreVertical className="w-4 h-4 text-gray-300" />
+                          </button>
                         </div>
                       </div>
                       
-                                             {/* Expanded time breakdown */}
-                       {isExpanded && (
-                         <div className="px-3 pb-3 border-t border-gray-600 bg-gray-800 rounded-b-lg">
-                           <div className="pt-3 space-y-2 text-sm">
-                             <div className="flex justify-between items-center">
-                               <span className="text-gray-300">Daily:</span>
-                               <span className="font-mono text-gray-200">
-                                 {formatTime(timeBreakdown.daily)}
-                               </span>
-                             </div>
-                             <div className="flex justify-between items-center">
-                               <span className="text-gray-300">Weekly:</span>
-                               <span className="font-mono text-gray-200">
-                                 {formatTime(timeBreakdown.weekly)}
-                               </span>
-                             </div>
-                             <div className="flex justify-between items-center">
-                               <span className="text-gray-300">Monthly:</span>
-                               <span className="font-mono text-gray-200">
-                                 {formatTime(timeBreakdown.monthly)}
-                               </span>
-                             </div>
-                             <div className="flex justify-between items-center">
-                               <span className="text-gray-300">All Time:</span>
-                               <span className="font-mono text-gray-200">
-                                 {formatTime(timeBreakdown.allTime)}
-                               </span>
-                             </div>
-                           </div>
-                         </div>
-                       )}
+                      {/* Expanded time breakdown */}
+                      {isExpanded && (
+                        <div className="px-3 pb-3 border-t border-gray-600 bg-gray-800 rounded-b-lg">
+                          <div className="pt-3 space-y-2 text-sm">
+                            <div className="flex justify-between items-center">
+                              <span className="text-gray-300">Daily:</span>
+                              <span className="font-mono text-gray-200">
+                                {formatTime(timeBreakdown.daily)}
+                              </span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                              <span className="text-gray-300">Weekly:</span>
+                              <span className="font-mono text-gray-200">
+                                {formatTime(timeBreakdown.weekly)}
+                              </span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                              <span className="text-gray-300">Monthly:</span>
+                              <span className="font-mono text-gray-200">
+                                {formatTime(timeBreakdown.monthly)}
+                              </span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                              <span className="text-gray-300">All Time:</span>
+                              <span className="font-mono text-gray-200">
+                                {formatTime(timeBreakdown.allTime)}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
                     );
                   })}
