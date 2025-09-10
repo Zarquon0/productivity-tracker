@@ -8,9 +8,10 @@ interface DataManagerProps {
   onDataImported: () => void;
   subjects: Array<{ id: string; name: string }>;
   onAddManualTime: (subjectId: string, durationMinutes: number) => void;
+  onRemoveManualTime: (subjectId: string, durationMinutes: number) => void;
 }
 
-export default function DataManager({ onDataImported, subjects, onAddManualTime }: DataManagerProps) {
+export default function DataManager({ onDataImported, subjects, onAddManualTime, onRemoveManualTime }: DataManagerProps) {
   const [showImportModal, setShowImportModal] = useState(false);
   const [importText, setImportText] = useState('');
   const [importError, setImportError] = useState('');
@@ -19,6 +20,7 @@ export default function DataManager({ onDataImported, subjects, onAddManualTime 
   const [showManualTimeModal, setShowManualTimeModal] = useState(false);
   const [selectedSubject, setSelectedSubject] = useState('');
   const [timeInput, setTimeInput] = useState('');
+  const [isAddingTime, setIsAddingTime] = useState(true);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -104,10 +106,10 @@ export default function DataManager({ onDataImported, subjects, onAddManualTime 
               <button
                 onClick={() => setShowManualTimeModal(true)}
                 className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-md transition-colors text-xs"
-                title="Add manual time entry"
+                title="Alter time entry"
               >
                 <Clock className="w-3.5 h-3.5" />
-                Add Time
+                Alter Time
               </button>
               <button
                 onClick={handleExport}
@@ -180,7 +182,7 @@ export default function DataManager({ onDataImported, subjects, onAddManualTime 
                         className="w-full px-4 py-2 text-left text-gray-200 hover:bg-gray-700 transition-colors flex items-center gap-2"
                       >
                         <Clock className="w-4 h-4 text-purple-400" />
-                        Add Time
+                        Alter Time
                       </button>
                       <button
                         onClick={() => {
@@ -385,12 +387,13 @@ export default function DataManager({ onDataImported, subjects, onAddManualTime 
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-xl font-semibold text-white">Add Manual Time Entry</h3>
+                <h3 className="text-xl font-semibold text-white">Alter Time Entry</h3>
                 <button
                   onClick={() => {
                     setShowManualTimeModal(false);
                     setSelectedSubject('');
                     setTimeInput('');
+                    setIsAddingTime(true);
                   }}
                   className="text-gray-400 hover:text-white transition-colors"
                 >
@@ -419,13 +422,41 @@ export default function DataManager({ onDataImported, subjects, onAddManualTime 
                 
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Action:
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => setIsAddingTime(true)}
+                      className={`px-4 py-2 rounded-lg transition-colors ${
+                        isAddingTime 
+                          ? 'bg-green-600 text-white' 
+                          : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                      }`}
+                    >
+                      Add Time
+                    </button>
+                    <button
+                      onClick={() => setIsAddingTime(false)}
+                      className={`px-4 py-2 rounded-lg transition-colors ${
+                        !isAddingTime 
+                          ? 'bg-red-600 text-white' 
+                          : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                      }`}
+                    >
+                      Remove Time
+                    </button>
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
                     Time Duration (minutes):
                   </label>
                   <input
                     type="number"
                     value={timeInput}
                     onChange={(e) => setTimeInput(e.target.value)}
-                    placeholder="e.g., 30"
+                    placeholder={isAddingTime ? "e.g., 30" : "e.g., 15"}
                     min="1"
                     className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
                   />
@@ -447,17 +478,26 @@ export default function DataManager({ onDataImported, subjects, onAddManualTime 
                       if (selectedSubject && timeInput) {
                         const duration = parseInt(timeInput);
                         if (duration > 0) {
-                          onAddManualTime(selectedSubject, duration);
+                          if (isAddingTime) {
+                            onAddManualTime(selectedSubject, duration);
+                          } else {
+                            onRemoveManualTime(selectedSubject, duration);
+                          }
                           setShowManualTimeModal(false);
                           setSelectedSubject('');
                           setTimeInput('');
+                          setIsAddingTime(true);
                         }
                       }
                     }}
                     disabled={!selectedSubject || !timeInput || parseInt(timeInput) <= 0}
-                    className="px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
+                    className={`px-4 py-2 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-lg transition-colors ${
+                      isAddingTime 
+                        ? 'bg-green-600 hover:bg-green-700' 
+                        : 'bg-red-600 hover:bg-red-700'
+                    }`}
                   >
-                    Add Time
+                    {isAddingTime ? 'Add Time' : 'Remove Time'}
                   </button>
                 </div>
               </div>

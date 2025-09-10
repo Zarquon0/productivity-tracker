@@ -20,7 +20,8 @@ export default function Home() {
     getTypeTotalTime,
     getActiveSubject,
     refreshData,
-    addManualTimeEntry
+    addManualTimeEntry,
+    removeManualTimeEntry
   } = usePersistentData();
 
   const [activeSubject, setActiveSubject] = useState<string | null>(null);
@@ -827,6 +828,7 @@ export default function Home() {
         onDataImported={refreshData}
         subjects={data.subjects.map(s => ({ id: s.id, name: s.name }))}
         onAddManualTime={addManualTimeEntry}
+        onRemoveManualTime={removeManualTimeEntry}
       />
     </div>
   );

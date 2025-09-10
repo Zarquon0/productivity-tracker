@@ -4,6 +4,7 @@ import {
   saveData, 
   createTimeEntry, 
   createManualTimeEntry,
+  removeTimeFromRecentEntries,
   calculateSubjectTotalTime,
   getTimeBreakdown,
   AppData, 
@@ -73,6 +74,14 @@ export function usePersistentData() {
     setData(prev => ({
       ...prev,
       timeEntries: [...prev.timeEntries, timeEntry]
+    }));
+  }, []);
+
+  // Remove time from recent entries
+  const removeManualTimeEntry = useCallback((subjectId: string, durationMinutes: number) => {
+    setData(prev => ({
+      ...prev,
+      timeEntries: removeTimeFromRecentEntries(subjectId, durationMinutes, prev.timeEntries)
     }));
   }, []);
 
@@ -171,6 +180,7 @@ export function usePersistentData() {
     updateSubjects,
     addTimeEntry,
     addManualTimeEntry,
+    removeManualTimeEntry,
     startTracking,
     stopTracking,
     getSubjectTimeBreakdown,

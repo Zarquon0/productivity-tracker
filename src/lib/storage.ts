@@ -138,6 +138,46 @@ export function createManualTimeEntry(subjectId: string, durationMinutes: number
   };
 }
 
+// Remove time from recent entries for a subject
+export function removeTimeFromRecentEntries(subjectId: string, durationMinutes: number, timeEntries: TimeEntry[]): TimeEntry[] {
+  const durationSeconds = durationMinutes * 60;
+  let remainingToRemove = durationSeconds;
+  
+  // Get all entries for this subject, sorted by most recent first
+  const subjectEntries = timeEntries
+    .filter(entry => entry.subjectId === subjectId)
+    .sort((a, b) => b.endTime - a.endTime); // Most recent first
+  
+  const updatedEntries = [...timeEntries];
+  
+  for (const entry of subjectEntries) {
+    if (remainingToRemove <= 0) break;
+    
+    const entryIndex = updatedEntries.findIndex(e => e.id === entry.id);
+    if (entryIndex === -1) continue;
+    
+    if (entry.duration <= remainingToRemove) {
+      // Remove the entire entry
+      remainingToRemove -= entry.duration;
+      updatedEntries.splice(entryIndex, 1);
+    } else {
+      // Reduce the entry's duration
+      const newDuration = entry.duration - remainingToRemove;
+      const durationMs = newDuration * 1000;
+      const newEndTime = entry.startTime + durationMs;
+      
+      updatedEntries[entryIndex] = {
+        ...entry,
+        endTime: newEndTime,
+        duration: newDuration
+      };
+      remainingToRemove = 0;
+    }
+  }
+  
+  return updatedEntries;
+}
+
 // Calculate total time for a subject from time entries
 export function calculateSubjectTotalTime(subjectId: string, timeEntries: TimeEntry[]): number {
   return timeEntries
